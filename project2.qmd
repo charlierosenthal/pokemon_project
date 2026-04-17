@@ -1,0 +1,136 @@
+---
+title: ""
+format: 
+  dashboard:
+    theme: solar
+logo: images/logo.png
+server: shiny
+---
+```{r}
+#| message: false
+#| context: setup
+
+library(shiny)
+library(bslib)
+library(tidyverse)
+library(bsicons)
+library(knitr)
+
+
+pokemon <- read_csv("Pokedex_Ver_SV2 copy 2.csv",
+                    col_select = c(4:13, 26:32))
+```
+
+# {.sidebar}
+
+This dashboard contains information on all 1203 Pokémon from generations 1-9
+
+::: {.callout-note collapse="true"}
+## Dedication
+
+This project is dedicated to my dad and our 2016 late-night poke-runs 
+
+:::
+
+# Overview
+
+## Row {height="40%"}
+
+### Column {width="40%"}
+
+
+```{r}
+#| title: Generation
+
+pokemon %>% count(Generation) %>% kable(col.names = c("Generation", "Count"))
+```
+
+
+### Column {width="60%"}
+
+```{r}
+#| title: Distribution of Types
+
+pokemon %>%
+  ggplot(mapping = aes(x = Type1, fill = Type1)) +
+  geom_bar(show.legend = FALSE) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Type 1")
+```
+
+## Row
+
+```{r}
+#| title: Defense by Attack, colored by Type 1
+
+pokemon %>%
+  ggplot(mapping = aes(x = Attack, y = Defense, colour = Type1)) +
+  geom_point()
+```
+
+
+```{r}
+#| title: Average Statistics, by Type 1
+
+pokemon %>% 
+  group_by(Type1) %>%
+  summarise(
+    "Average Attack" = mean(Attack),
+    "Average HP" = mean(HP),
+    "Average Defense" = mean(Defense),
+    "Average Total" = mean (Total)
+  ) %>%
+  arrange(`Average Total`) %>%
+  kable(digits = 0)
+```
+
+# My favorites
+
+# Battle!
+
+```{r}
+
+page_fillable(
+  card(
+    card_header("Select first Pokemon"),
+    selectInput(
+      "poke1",
+      "Choice 1",
+      choices = pokemon$Name,
+      selected = 1)
+  ),
+  card(
+    card_header("Select second Pokemon"),
+    selectInput(
+      "poke2",
+      "Choice 2",
+      choices = pokemon$Name,
+      selected = 1)
+  ),
+  card(
+  textOutput("winner"))
+
+)
+```
+
+```{r}
+#| context: server
+  
+  selected_pokemon1 <- reactive({
+    pokemon |>
+      filter(Name == input$poke1)
+  })
+  
+ 
+  selected_pokemon2 <- reactive({
+    pokemon |>
+      filter(Name == input$poke2)
+  })
+  
+
+  output$winner <- renderText({
+    paste("The winner is", ifelse(selected_pokemon1()$Total>selected_pokemon2()$Total, input$poke1, input$poke2),"!")
+  })
+
+```
+
