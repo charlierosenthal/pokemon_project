@@ -1,0 +1,1 @@
+This is my final project for my STAT 408 class. Through this project, I created my first quarto dashboard as well as getting my first experience with R Shiny. I used a pokemon dataset that I found on kaggle (https://www.kaggle.com/code/huynhquochiep/pokemon/input) and cleaned some of the columns down to just what I was interested in visualizing. 
