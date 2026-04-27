@@ -2,7 +2,7 @@
 title: ""
 format: 
   dashboard:
-    theme: solar
+    theme: yetti
 logo: images/logo.png
 server: shiny
 ---
@@ -17,7 +17,7 @@ library(bsicons)
 library(knitr)
 
 
-pokemon <- read_csv("Pokedex_Ver_SV2 copy 2.csv",
+pokemon <- read_csv("data/pokemondata.csv",
                     col_select = c(4:13, 26:32))
 ```
 
@@ -34,9 +34,7 @@ This project is dedicated to my dad and our 2016 late-night poke-runs
 
 # Overview
 
-## Row {height="40%"}
-
-### Column {width="40%"}
+## Row {height="50%"}
 
 
 ```{r}
@@ -46,33 +44,26 @@ pokemon %>% count(Generation) %>% kable(col.names = c("Generation", "Count"))
 ```
 
 
-### Column {width="60%"}
-
 ```{r}
 #| title: Distribution of Types
+#| out-width: "100%"
+#| out-height: "100%"
 
 pokemon %>%
   ggplot(mapping = aes(x = Type1, fill = Type1)) +
   geom_bar(show.legend = FALSE) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "Type 1")
+  labs(x = "Type 1", y = "Count")
 ```
 
 ## Row
 
 ```{r}
-#| title: Defense by Attack, colored by Type 1
+#| title: Stacked Bar Chart of Average Statistics, by Type 1
+#| out-width: "100%"
+#| out-height: "100%"
 
-pokemon %>%
-  ggplot(mapping = aes(x = Attack, y = Defense, colour = Type1)) +
-  geom_point()
-```
-
-
-```{r}
-#| title: Average Statistics, by Type 1
-
-pokemon %>% 
+pokemon_avg <- pokemon %>% 
   group_by(Type1) %>%
   summarise(
     "Average Attack" = mean(Attack),
@@ -80,11 +71,57 @@ pokemon %>%
     "Average Defense" = mean(Defense),
     "Average Total" = mean (Total)
   ) %>%
+  arrange(`Average Total`)
+
+pokemon_pivot <- pokemon_avg %>%
+  pivot_longer(
+    cols = c("Average Attack", "Average HP", "Average Defense"),
+    names_to = "Stats",
+    values_to = "Value"
+  )
+
+pokemon_pivot %>%
+  ggplot(mapping = aes(x = Type1, y = Value, fill = Stats)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(values = c(
+    "Average HP" = "#2596be",
+    "Average Defense" = "#3266b1",
+    "Average Attack" = "#ffcb00"
+  )) +
+  labs(y = "Average Statistics")
+
+```
+
+
+```{r}
+#| title: Table of Average Statistics, by Type 1
+#| fig-cap: "*The total score for any given pokemon contains more than the three variables shown, but these are the only ones highlighted for simplicity*"
+
+
+pokemon_avg %>%
   arrange(`Average Total`) %>%
   kable(digits = 0)
 ```
 
 # My favorites
+
+## Row
+
+::: {.card title="Sudowoodo"}
+
+![I like Sudowoodo because he does a little dance and jazz hands that make me smile. He's a rock type who's abilities are Sturdy and Rock Head](images/sudowoodo.png){height=300px}
+:::
+
+::: {.card title="Mudkip"}
+
+![I like Mudkip for his contrasting colors and little star cheeks. He's a water type who's main ability is Torrent](images/mudkip.png){height=300px}
+:::
+
+::: {.card title="Grookey"}
+
+![I like Grookey because he has a really sweet smile and I like the little stick in his hair. He's a grass type with overgrow ability](images/grookey.png){height=300px}
+:::
 
 # Battle!
 
@@ -93,21 +130,40 @@ pokemon %>%
 page_fillable(
   card(
     card_header("Select first Pokemon"),
+    layout_columns(
+      col_widths = c(2,6),
+    card_image(
+      "images/poke_ball.png",
+      height = "200px", 
+      width = "200px"
+    ),
     selectInput(
       "poke1",
       "Choice 1",
       choices = pokemon$Name,
       selected = 1)
-  ),
+  )),
   card(
-    card_header("Select second Pokemon"),
+  card_header("Select second Pokemon"),
+  layout_columns(
+      col_widths = c(2, 6),
+    card_image(
+      "images/poke_ball.png", 
+      height = "200px", 
+      width = "200px"
+    ),
     selectInput(
       "poke2",
       "Choice 2",
       choices = pokemon$Name,
-      selected = 1)
-  ),
+      selected = 1
+    )
+  )),
   card(
+  card_image(
+    "images/stars.png", 
+    height = "200px",
+    width = "200px"),
   textOutput("winner"))
 
 )
