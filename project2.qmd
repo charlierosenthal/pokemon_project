@@ -3,6 +3,7 @@ title: ""
 format: 
   dashboard:
     theme: yetti
+    df-print: paged
 logo: images/logo.png
 server: shiny
 ---
@@ -15,15 +16,19 @@ library(bslib)
 library(tidyverse)
 library(bsicons)
 library(knitr)
-
+library(DT)
 
 pokemon <- read_csv("data/pokemondata.csv",
-                    col_select = c(4:13, 26:32))
+                    col_select = c("Name", "Generation", "Type1", "HP", "Attack", "Defense"))
 ```
 
 # {.sidebar}
 
-This dashboard contains information on all 1203 Pokémon from generations 1-9
+This dashboard contains information on all 1203 Pokémon from generations 1-9.
+
+The original dataset used contained 38 columns, but I selected the only ones I was interested in. 
+
+Full dataset can be found [here](https://www.kaggle.com/code/huynhquochiep/pokemon/input)
 
 ::: {.callout-note collapse="true"}
 ## Dedication
@@ -34,7 +39,7 @@ This project is dedicated to my dad and our 2016 late-night poke-runs
 
 # Overview
 
-## Row {height="50%"}
+## Row
 
 
 ```{r}
@@ -56,12 +61,43 @@ pokemon %>%
   labs(x = "Type 1", y = "Count")
 ```
 
+
 ## Row
 
 ```{r}
-#| title: Stacked Bar Chart of Average Statistics, by Type 1
-#| out-width: "100%"
-#| out-height: "100%"
+#| title: Histogram of HP
+pokemon %>%
+  ggplot(mapping = aes(x = HP)) +
+  geom_histogram(bins = 15, fill = "#2596be") +
+  labs(y = "")
+
+```
+
+```{r}
+#| title: Histogram of Defense Points
+pokemon %>%
+  ggplot(mapping = aes(x = Defense)) +
+  geom_histogram(bins = 15, fill = "#3266b1") +
+  labs(y = "")
+```
+
+
+```{r}
+#| title: Histogram of Attack Points
+pokemon %>%
+  ggplot(mapping = aes(x = Attack)) +
+  geom_histogram(bins = 15, fill = "#ffcb00") +
+  labs(y = "")
+```
+
+# Statistics by Type
+
+## Row
+
+
+```{r}
+#| title: Table of Average Statistics, by Type 1
+#| fig-cap: "*The total score for any given pokemon contains more than the three variables shown, but these are the only ones highlighted for simplicity*"
 
 pokemon_avg <- pokemon %>% 
   group_by(Type1) %>%
@@ -69,7 +105,7 @@ pokemon_avg <- pokemon %>%
     "Average Attack" = mean(Attack),
     "Average HP" = mean(HP),
     "Average Defense" = mean(Defense),
-    "Average Total" = mean (Total)
+    "Average Total" = sum (mean(Attack), mean(HP), mean(Defense))
   ) %>%
   arrange(`Average Total`)
 
@@ -80,8 +116,22 @@ pokemon_pivot <- pokemon_avg %>%
     values_to = "Value"
   )
 
-pokemon_pivot %>%
-  ggplot(mapping = aes(x = Type1, y = Value, fill = Stats)) +
+pokemon_avg %>%
+  arrange(`Average Total`) %>%
+  kable(digits = 0)
+```
+
+
+```{r}
+#| title: Stacked Bar Chart of Average Statistics, by Type 1
+#| fig-cap: "*Arranged in order of Average Total*"
+
+pokemon_pivot_desc <- pokemon_pivot %>%
+  group_by(Type1) %>%
+  arrange('Average Total')
+
+pokemon_pivot_desc %>%
+  ggplot(mapping = aes(x = forcats::fct_inorder(Type1), y = Value, fill = Stats)) +
   geom_bar(stat = "identity") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_fill_manual(values = c(
@@ -89,20 +139,10 @@ pokemon_pivot %>%
     "Average Defense" = "#3266b1",
     "Average Attack" = "#ffcb00"
   )) +
-  labs(y = "Average Statistics")
+  labs(x = "Type 1", y = "Average Statistics")
 
 ```
 
-
-```{r}
-#| title: Table of Average Statistics, by Type 1
-#| fig-cap: "*The total score for any given pokemon contains more than the three variables shown, but these are the only ones highlighted for simplicity*"
-
-
-pokemon_avg %>%
-  arrange(`Average Total`) %>%
-  kable(digits = 0)
-```
 
 # My favorites
 
@@ -188,5 +228,11 @@ page_fillable(
     paste("The winner is", ifelse(selected_pokemon1()$Total>selected_pokemon2()$Total, input$poke1, input$poke2),"!")
   })
 
+```
+
+# Data
+
+```{r}
+DT::datatable(pokemon, editable = 'cell')
 ```
 
