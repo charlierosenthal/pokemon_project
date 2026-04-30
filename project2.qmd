@@ -21,78 +21,78 @@ pokemon <- read_csv("data/pokemondata.csv",
                     col_select = c("Name", "Generation", "Type1", "HP", "Attack", "Defense", "Total"))
 ```
 
-# {.sidebar}
+# {.sidebar collapse="true"}
 
 This dashboard contains information on all 1203 Pokémon from generations 1-9.
 
 The original dataset used contained 38 columns, but I selected the only ones I was interested in. 
 
+I wanted to explore different charactertics of all of the Pokemon in the set, specifically their effectivness in battle as it relates to their type. 
+
 Full dataset can be found [here](https://www.kaggle.com/code/huynhquochiep/pokemon/input)
 
-::: {.callout-note collapse="true"}
+::: {.callout-note appearance=simple collapse="true"}
+
 ## Dedication
 
-This project is dedicated to my dad and our 2016 late-night poke-runs 
+This project is dedicated to my dad and our 2016 late-night poke-runs and our new found joy over our old interests.
 
 :::
 
 # Overview
 
-## Row
+## Row {height=60%}
 
-
+::: {.car title = "Generation"}
 ```{r}
-#| title: Generation
-
 pokemon %>% count(Generation) %>% kable(col.names = c("Generation", "Count"))
 ```
+We can see that Generation 5 had the most new additions to the Pokedex, followed very closely by Generation 1. I like that the first generation has nearly the most amount of Pokemon because it means that there are a lot of classic ones that people remember from when they were younger. The fewest new characters came from Generation 6 but this is the generation that brought us Chespin, so that's definitely a win. 
+:::
 
-
+:::{.card title = "Distribution of Types"}
 ```{r}
-#| title: Distribution of Types
 #| out-width: "100%"
 #| out-height: "100%"
 
 pokemon %>%
-  ggplot(mapping = aes(x = Type1, fill = Type1)) +
+  ggplot(mapping = aes(x = fct_infreq(Type1), fill = Type1)) +
   geom_bar(show.legend = FALSE) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(x = "Type 1", y = "Count")
 ```
 
+As you can see, the most prevalent is Water with about 150 different Pokemon being water types and the least common are Flying with only 10 different Pokemon.
+
+:::
 
 ## Row
 
 ```{r}
-#| title: Histogram of HP
+#| title: Histogram of HP, Defense, and Attack
+#| layout-ncol: 3
 pokemon %>%
   ggplot(mapping = aes(x = HP)) +
   geom_histogram(bins = 15, fill = "#2596be") +
   labs(y = "")
 
-```
-
-```{r}
-#| title: Histogram of Defense Points
 pokemon %>%
   ggplot(mapping = aes(x = Defense)) +
   geom_histogram(bins = 15, fill = "#3266b1") +
   labs(y = "")
-```
 
-
-```{r}
-#| title: Histogram of Attack Points
 pokemon %>%
   ggplot(mapping = aes(x = Attack)) +
   geom_histogram(bins = 15, fill = "#ffcb00") +
   labs(y = "")
 ```
 
-# Statistics by Type
 
-## Row
 
+
+# Statistics by Type {orientation="columns"}
+
+## Column {width = 60%}
 
 ```{r}
 #| title: Table of Average Statistics, by Type 1
@@ -120,6 +120,7 @@ pokemon_avg %>%
   kable(digits = 0)
 ```
 
+## Column {width = 40%}
 
 ```{r}
 #| title: Stacked Bar Chart of Average Statistics, by Type 1
@@ -143,23 +144,31 @@ pokemon_pivot_desc %>%
 ```
 
 
+::: {.card title="Closing Thoughts"}
+
+This shows that based on these metrics, Steel and Dragon are pretty superior types when it comes to battling with Bug and Electric really trailing behind. Bug was the 4th most common type, so it's unfortunate that they're so lacking when it comes to battling. Additionally, it's interesting that flying types are so average when it comes to their ability, even though there are so few flying types, because one may think there be a link between their scarcity and ability, but this does not appear to be the case. Also funny to note that fighting types ranked only third on this scale because you would think they would be the most well-suited for battle. I think in the future, it may be fun to look at a way to model performance using the different types of statistics and controlling for type, although, having 17 indicator variables might be a lot, so there would probably need to be some binning done to simplify the model...
+
+:::
+
 # My favorites
+
+These are my all-time top 3 favorite Pokemon! I drew them myself as a labor of love. You can find out more about them by finding them in the [Pokemon Search](https://charlierosenthal.shinyapps.io/project2/#pokemon-search) tab!
 
 ## Row
 
 ::: {.card title="Sudowoodo"}
 
-![I like Sudowoodo because he does a little dance and jazz hands that make me smile. He's a rock type who's abilities are Sturdy and Rock Head](images/sudowoodo.png){height=300px}
+![I like Sudowoodo because he does a little dance and jazz hands that make me smile. He's a gen 2 rock type who's abilities are Sturdy and Rock Head](images/sudowoodo.png){height=300px}
 :::
 
 ::: {.card title="Mudkip"}
 
-![I like Mudkip for his contrasting colors and little star cheeks. He's a water type who's main ability is Torrent](images/mudkip.png){height=300px}
+![I like Mudkip for his contrasting colors and little star cheeks. He's a gen 3 water type who's main ability is Torrent](images/mudkip.png){height=300px}
 :::
 
 ::: {.card title="Grookey"}
 
-![I like Grookey because he has a really sweet smile and I like the little stick in his hair. He's a grass type with overgrow ability](images/grookey.png){height=300px}
+![I like Grookey because he has a really sweet smile and I like the little stick in his hair. He's the newest of the bunch, being from gen 8 and he's a grass type with overgrow ability](images/grookey.png){height=300px}
 :::
 
 # Battle!
@@ -229,7 +238,9 @@ page_fillable(
 
 ```
 
-# Data
+# Pokemon Search
+
+Look for you favorite Pokemon by typing their name, or you can find all Pokemon of the same type. For example, try looking up "Bug". 
 
 ```{r}
 DT::datatable(pokemon, editable = 'cell')
